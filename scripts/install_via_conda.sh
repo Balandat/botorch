@@ -28,6 +28,7 @@ fi
 # install other deps
 conda install -y pip scipy sphinx pytest flake8
 conda install -y -c conda-forge black pytest-cov sphinx-autodoc-typehints
+pip install --progress-bar off usort
 
 # get gpytorch master
 git clone https://github.com/cornellius-gp/gpytorch.git ../gpytorch
