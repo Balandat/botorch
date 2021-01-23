@@ -277,7 +277,7 @@ def prune_inferior_points(
     samples = sampler(posterior)
     if objective is None:
         objective = IdentityMCObjective()
-    obj_vals = objective(samples)
+    obj_vals = objective(samples, X=X)
     if obj_vals.ndim > 2:
         # TODO: support batched inputs (req. dealing with ragged tensors)
         raise UnsupportedError(
