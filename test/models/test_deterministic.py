@@ -5,7 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 import torch
-from botorch.exceptions.errors import UnsupportedError
 from botorch.models.deterministic import (
     AffineDeterministicModel,
     DeterministicModel,
@@ -46,9 +45,9 @@ class TestDeterministicModels(BotorchTestCase):
         p = model.posterior(X)
         self.assertIsInstance(p, DeterministicPosterior)
         self.assertTrue(torch.equal(p.mean, f(X)))
-        # check that w/ observation noise this errors properly
-        with self.assertRaises(UnsupportedError):
-            model.posterior(X, observation_noise=True)
+        # check that observaiton noise doesn't change things
+        p_noisy = model.posterior(X, observation_noise=True)
+        self.assertTrue(torch.equal(p_noisy.mean, f(X)))
         # check output indices
         model = GenericDeterministicModel(lambda X: X, num_outputs=2)
         self.assertEqual(model.num_outputs, 2)
