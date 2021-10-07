@@ -7,7 +7,6 @@
 import warnings
 
 import torch
-from botorch.exceptions.errors import UnsupportedError
 from botorch.models.deterministic import (
     AffineDeterministicModel,
     DeterministicModel,
