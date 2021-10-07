@@ -113,7 +113,7 @@ class GenericDeterministicModel(DeterministicModel):
         def f_subset(X: Tensor) -> Tensor:
             return self._f(X)[..., idcs]
 
-        return self.__class__(f=f_subset)
+        return self.__class__(f=f_subset, num_outputs=len(idcs))
 
     def forward(self, X: Tensor) -> Tensor:
         r"""Compute the (deterministic) model output at X.

@@ -209,9 +209,9 @@ class Model(Module, ABC):
                 self._has_transformed_inputs = True
             else:
                 warnings.warn(
-                    "Could not update `train_inputs` with transformed inputs"
-                    f"since {self.__class__.__name__} does not have a `train_inputs`"
-                    "attribute. Make sure that the `input_transform` is applied to"
+                    "Could not update `train_inputs` with transformed inputs "
+                    f"since {self.__class__.__name__} does not have a `train_inputs` "
+                    "attribute. Make sure that the `input_transform` is applied to "
                     "both the train inputs and test inputs.",
                     RuntimeWarning,
                 )
@@ -276,11 +276,12 @@ class ModelList(Model):
             return {i: None for i in range(len(self.models))}
         output_sizes = [model.num_outputs for model in self.models]
         cum_output_sizes = np.cumsum(output_sizes)
+        idcs = [idx % cum_output_sizes[-1] for idx in idcs]
         group_indices: Dict[int, List[int]] = defaultdict(list)
         for idx in idcs:
-            grp_idx = np.sum(idx + 1 >= cum_output_sizes) - 1
-            sub_idx = idx - cum_output_sizes[min(grp_idx - 1, 0)]
-            group_indices[idx].append(sub_idx)
+            grp_idx = int(np.argwhere(idx < cum_output_sizes)[0])
+            sub_idx = idx - int(np.sum(output_sizes[:grp_idx]))
+            group_indices[grp_idx].append(sub_idx)
         return group_indices
 
     def posterior(

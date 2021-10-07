@@ -69,7 +69,11 @@ class TestPosteriorList(BotorchTestCase):
             self.assertTrue(
                 torch.equal(p.variance, torch.cat([p_1.variance, p_2.variance], dim=-1))
             )
+            # test sampling w/o base samples
             sample_shape = torch.Size([4])
+            samples = p.sample(sample_shape=sample_shape)
+            self.assertEqual(samples.shape, torch.Size([4, 3, 2]))
+            # test sampling w/ base samples
             base_samples = torch.randn(
                 sample_shape + p.base_sample_shape, device=self.device, dtype=dtype
             )

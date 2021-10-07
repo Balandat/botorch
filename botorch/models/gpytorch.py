@@ -34,6 +34,7 @@ from botorch.posteriors.gpytorch import GPyTorchPosterior
 from gpytorch.distributions import MultitaskMultivariateNormal, MultivariateNormal
 from gpytorch.lazy import lazify
 from gpytorch.likelihoods.gaussian_likelihood import FixedNoiseGaussianLikelihood
+from gpytorch.utils.broadcasting import _mul_broadcast_shape
 from torch import Tensor
 
 
@@ -479,6 +480,30 @@ class ModelListGPyTorchModel(GPyTorchModel, ModelList, ABC):
     evaluation of submodels.
     """
 
+    @property
+    def batch_shape(self) -> torch.Size:
+        r"""The batch shape of the model.
+
+        This is a batch shape from an I/O perspective, independent of the internal
+        representation of the model (as e.g. in BatchedMultiOutputGPyTorchModel).
+        For a model with `m` outputs, a `test_batch_shape x q x d`-shaped input `X`
+        to the `posterior` method returns a Posterior object over an output of
+        shape `broadcast(test_batch_shape, model.batch_shape) x q x m`.
+        """
+        batch_shapes = {ti[0].shape[:-2] for ti in self.train_inputs}
+        if len(batch_shapes) > 1:
+            msg = (
+                f"Component models of {self.__class__.__name__} have different "
+                "batch shapes"
+            )
+            try:
+                broadcast_shape = _mul_broadcast_shape(*batch_shapes)
+                warnings.warn(msg + ". Broadcasting batch shapes.")
+                return broadcast_shape
+            except RuntimeError:
+                raise NotImplementedError(msg + " that are not broadcastble.")
+        return next(iter(batch_shapes))
+
     def posterior(
         self,
         X: Tensor,
@@ -562,6 +587,9 @@ class ModelListGPyTorchModel(GPyTorchModel, ModelList, ABC):
         return GPyTorchPosterior(
             mvn=MultitaskMultivariateNormal.from_independent_mvns(mvns=mvns)
         )
+
+    def condition_on_observations(self, X: Tensor, Y: Tensor, **kwargs: Any) -> Model:
+        raise NotImplementedError()
 
 
 class MultiTaskGPyTorchModel(GPyTorchModel, ABC):
