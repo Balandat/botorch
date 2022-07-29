@@ -193,21 +193,24 @@ def optimize_acqf(
         return X, acq_value
 
     if batch_initial_conditions is None:
-        if nonlinear_inequality_constraints:
-            raise NotImplementedError(
-                "`batch_initial_conditions` must be given if there are non-linear "
-                "inequality constraints."
+        ic_gen =  = kwargs.get("ic_generator")
+        if ic_gen is None:
+            if nonlinear_inequality_constraints:
+                raise NotImplementedError(
+                    "`batch_initial_conditions` must be given if "
+                    "there are non-linear inequality constraints."
+                )
+            if raw_samples is None:
+                raise ValueError(
+                    "Must specify `raw_samples` when "
+                    "`batch_initial_conditions` is `None`."
+                )
+        else:
+            ic_gen = (
+                gen_one_shot_kg_initial_conditions
+                if isinstance(acq_function, qKnowledgeGradient)
+                else gen_batch_initial_conditions
             )
-        if raw_samples is None:
-            raise ValueError(
-                "Must specify `raw_samples` when `batch_initial_conditions` is `None`."
-            )
-
-        ic_gen = (
-            gen_one_shot_kg_initial_conditions
-            if isinstance(acq_function, qKnowledgeGradient)
-            else gen_batch_initial_conditions
-        )
         batch_initial_conditions = ic_gen(
             acq_function=acq_function,
             bounds=bounds,
